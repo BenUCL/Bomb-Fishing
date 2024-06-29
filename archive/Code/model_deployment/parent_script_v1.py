@@ -1,12 +1,10 @@
 
+
 # copy in the file path to where the hydromoth recordings are saved:
-new_audio_dir = r"C:\Users\ben07\OneDrive - University College London\UCL PhD\Chapter 4 Bombs\example_data" #<-------
+new_audio_dir = r"C:\Users\Sustainable Solution\OneDrive\bomb-detector\data\25May2023North\22Mei2023_North(4)" #<-------
 
 # copy in the file path to where the results should be saved:
-output_folder = r"C:\Users\ben07\OneDrive - University College London\UCL PhD\Chapter 4 Bombs\example_output_folder" #<---------
-
-# model directory
-model_dir = r"C:\Users\ben07\OneDrive - University College London\UCL PhD\Chapter 4 Bombs\spermonde2024\saved_model_v1"
+output_folder = r"C:\Users\Sustainable Solution\OneDrive\Desktop\MSS_bombs\detected_bombs\25May2023North" #<---------
 
 
 # batch size (number of files to run in one go, start at 100 but may need to reduce size if it fails)
@@ -30,6 +28,7 @@ from datetime import datetime
 import numpy as np
 import pandas as pd
 
+model_dir = r"C:\Users\Sustainable Solution\OneDrive\Desktop\MSS_bombs\model"
 sample_rate = 8000
 
 

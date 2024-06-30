@@ -1,16 +1,97 @@
-
+# Paths
 # copy in the file path to where the hydromoth recordings are saved:
-new_audio_dir = r"C:\Users\ben07\OneDrive - University College London\UCL PhD\Chapter 4 Bombs\example_data" #<-------
+new_audio_dir = r"C:\Users\ben07\OneDrive - University College London\UCL PhD\Chapter 4 Bombs\scrtach\example_data" #<-------
 
 # copy in the file path to where the results should be saved:
-output_folder = r"C:\Users\ben07\OneDrive - University College London\UCL PhD\Chapter 4 Bombs\example_output_folder" #<---------
+output_folder = r"C:\Users\ben07\OneDrive - University College London\UCL PhD\Chapter 4 Bombs\scratch\example_output_folder" #<---------
 
 # model directory
-model_dir = r"C:\Users\ben07\OneDrive - University College London\UCL PhD\Chapter 4 Bombs\spermonde2024\saved_model_v1"
+model_dir = r"C:\Users\ben07\OneDrive - University College London\UCL PhD\Chapter 4 Bombs\spermonde2024\archive\saved_model_v1"
+
+# scratch folder
+scratch_folder = r"C:\Users\ben07\OneDrive - University College London\UCL PhD\Chapter 4 Bombs\spermonde2024\scratch"
+
+
+# imports
+import subprocess
+import os
+import datetime
+from datetime import datetime
+import numpy as np
+import pandas as pd
+import time
 
 
 # batch size (number of files to run in one go, start at 100 but may need to reduce size if it fails)
 batch_size = 100
+
+
+timing_file = os.path.join(scratch_folder, 'timing_log.txt')
+
+batch_size = 100
+sample_rate = 8000
+
+# Create initial results csv
+results_table = pd.DataFrame(columns=['File', 'Timestamp'])
+results_table.to_csv(os.path.join(output_folder, 'temporary_results_table.csv'), index=False)
+
+# Find the audio files
+new_audio_files = [f for f in os.listdir(new_audio_dir) if f.endswith('.wav') or f.endswith('.WAV')]
+
+if not new_audio_files:
+    print('\nNo files found, check the filepath in new_audio_dir.')
+
+batch_counter = 0
+file_counter = 0
+total_num_batches = len(new_audio_files) // batch_size
+
+def log_timing(task: str, duration: float):
+    with open(timing_file, 'a') as f:
+        f.write(f"{task}: {duration:.2f} seconds\n")
+
+# Process batches
+for i in range(0, len(new_audio_files), batch_size):
+    batch_files = new_audio_files[i:i+batch_size]
+    
+    with open('current_batch.txt', 'w') as f:
+        for file in batch_files:
+            f.write(file + '\n')
+
+    start_time = time.time()
+    
+    subprocess.run(['python', 'child_script.py', 
+                    'current_batch.txt', 
+                    new_audio_dir, 
+                    output_folder, 
+                    model_dir, 
+                    str(sample_rate), 
+                    str(batch_counter), 
+                    str(total_num_batches), 
+                    str(file_counter)])
+    
+    log_timing("Batch processing", time.time() - start_time)
+
+    # Load and count rows in results csv
+    df = pd.read_csv(os.path.join(output_folder, 'temporary_results_table.csv'))
+    num_rows = df.shape[0]
+    file_counter = str(num_rows)
+    batch_counter += 1
+    
+    os.remove('current_batch.txt')
+
+# Rename results table
+current_name = 'temporary_results_table.csv'
+timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+new_name = f'final_results_table_{timestamp}.csv'
+current_path = os.path.join(output_folder, current_name)
+new_path = os.path.join(output_folder, new_name)
+os.rename(current_path, new_path)
+
+print("Bomb detection complete on all files!\n")
+print(f"Found {num_rows} suspected bombs.")
+print(f"Results written to: {output_folder}")
+
+
 
 
 

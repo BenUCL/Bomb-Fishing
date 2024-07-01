@@ -106,6 +106,7 @@ def main():
                 mfcc_spec1 = np.expand_dims(mfcc_spec1, axis=0)
                 mfcc_spec2 = np.expand_dims(mfcc_spec2, axis=0)
 
+                # TODO(hamer): investigate batch inference.
                 # Perform the function on the MFCC spectrogram
                 result1 = best_model.predict(mfcc_spec1, verbose=0) > 0.5
                 if len(window2) == 23040:

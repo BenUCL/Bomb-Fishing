@@ -3,9 +3,12 @@
 import os
 from pathlib import Path
 
-# Give path to the raw audio files and the output folder
-RAW_AUDIO = "/media/bwilliams/226ECA8B6ECA56E7/four_islands_bombs/test_audio"
-OUTPUT_FOLDER = "detections" 
+# Give path to the raw audio files 
+RAW_AUDIO = "/media/bwilliams/226ECA8B6ECA56E7/four_islands_bombs/M36_pulau_pala"
+
+# Outputs will be saved in data/detections/<raw_name>, where <raw_name> is 
+# the name of the folder containing the raw audio files
+OUTPUT_FOLDER = "detections"  
 
 # Set base directory to hide paths
 BASE_DIR = os.getenv("BASE_DIR")
@@ -18,6 +21,7 @@ CODE_DIR    = PROJECT_DIR / "code"
 DATA_DIR    = PROJECT_DIR / "data"
 INPUT_DIR   = RAW_AUDIO      
 OUTPUT_DIR  = DATA_DIR / OUTPUT_FOLDER  
+OUTPUT_FOLDER = "detections" 
 MODEL_DIR   = CODE_DIR / "model"
 SCRATCH_DIR = PROJECT_DIR / "scratch" # where tmp files get stored
 

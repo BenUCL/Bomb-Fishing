@@ -2,79 +2,99 @@
 """
 batch_runner.py
 
-Split WAV files into batches and invoke the inference CLI for each batch,
-showing progress over batches.
+Split WAVs into batches, prompt once about overwrite, then invoke run_inference.py
+for each batch (passing --output-dir to data/detections/<raw_name>). Also appends
+all per-batch results into a single all_results.csv file.
 """
 
 import os
 import math
+import shutil
 import subprocess
 import logging
+import sys
 from pathlib import Path
 
+import pandas as pd
 from tqdm.auto import tqdm
-from config import MODEL_DIR, INPUT_DIR, OUTPUT_DIR, BATCH_SIZE, SCRATCH_DIR
+from config import MODEL_DIR, INPUT_DIR, DATA_DIR, BATCH_SIZE, SCRATCH_DIR, OUTPUT_FOLDER
 
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s %(levelname)s %(message)s"
 )
 
-
 def main() -> None:
-    """
-    Main entrypoint: batch up your .wav files and call the inference CLI for each batch.
-    Shows a progress bar over batches.
-    """
-    # ensure output and scratch directories exist
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    # 1. Determine output dir like data/detections/<raw_name>
+    raw_name = Path(INPUT_DIR).name
+    detections_base = DATA_DIR / OUTPUT_FOLDER
+    detections_base.mkdir(parents=True, exist_ok=True)
+    output_dir = detections_base / raw_name
+
+    # 2. Confirm deletion if it exists
+    if output_dir.exists():
+        resp = input(
+            f"Output directory '{output_dir}' already exists. "
+            "Proceeding will clear ALL its contents. Continue? [Y/N]: "
+        ).strip().lower()
+        if resp != "y":
+            print("Aborting.")
+            sys.exit(0)
+        shutil.rmtree(output_dir)
+
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    # 3. Set up scratch dir
     SCRATCH_DIR.mkdir(parents=True, exist_ok=True)
 
-    # gather all WAV filenames
+    # 4. Gather all input files
     files = [f for f in os.listdir(INPUT_DIR) if f.lower().endswith(".wav")]
-    total_files = len(files)
-    if total_files == 0:
+    if not files:
         logging.error("No WAV files found in %s", INPUT_DIR)
         return
 
-    total_batches = math.ceil(total_files / BATCH_SIZE)
-    logging.info(
-        "Found %d files; will process in %d batches (batch size=%d)",
-        total_files, total_batches, BATCH_SIZE
-    )
+    total_batches = math.ceil(len(files) / BATCH_SIZE)
+    logging.info("Processing %d files in %d batches (batch size=%d)",
+                 len(files), total_batches, BATCH_SIZE)
 
-    # batch-level progress bar
+    # 5. Prepare master CSV
+    master_csv = output_dir / "all_results.csv"
+    if master_csv.exists():
+        master_csv.unlink()
+
+    # 6. Loop over batches
     for batch_idx in tqdm(range(total_batches), desc="Batches", unit="batch"):
         start = batch_idx * BATCH_SIZE
-        batch_files = files[start:start + BATCH_SIZE]
+        batch_files = files[start : start + BATCH_SIZE]
 
-        # write this batch list into scratch
         batch_file = SCRATCH_DIR / f"batch_{batch_idx}.txt"
         batch_file.write_text("\n".join(batch_files))
 
-        logging.info(
-            "Starting batch %d/%d with %d files",
-            batch_idx + 1, total_batches, len(batch_files)
-        )
+        logging.info("Starting batch %d/%d with %d files…",
+                     batch_idx+1, total_batches, len(batch_files))
 
-        # invoke the per-batch inference CLI
         subprocess.run(
             [
-                "python",
-                "-m", "scripts.run_inference",
-                "--model-dir",  str(MODEL_DIR),
-                "--input-dir",  str(INPUT_DIR),
-                "--output-dir", str(OUTPUT_DIR),
+                "python", "-m", "scripts.run_inference",
+                "--model-dir", str(MODEL_DIR),
+                "--input-dir", str(INPUT_DIR),
+                "--output-dir", str(output_dir),
                 "--batch-file", str(batch_file)
             ],
             check=True
         )
 
-        # clean up
-        batch_file.unlink()
-        logging.info("Finished batch %d/%d", batch_idx + 1, total_batches)
+        # Append batch CSV to master CSV
+        batch_csv = output_dir / f"batch_{batch_idx}_results.csv"
+        if batch_csv.exists():
+            df = pd.read_csv(batch_csv)
+            df.to_csv(master_csv, mode="a", header=not master_csv.exists(), index=False)
+            batch_csv.unlink()
 
-    logging.info("All %d batches completed", total_batches)
+        batch_file.unlink()
+        logging.info("Finished batch %d/%d", batch_idx+1, total_batches)
+
+    logging.info("All batches complete. Final results in: %s", master_csv)
 
 
 if __name__ == "__main__":

@@ -1,3 +1,5 @@
+# inference/audio_utilspy
+
 import os
 from typing import List, Tuple
 import numpy as np
@@ -29,6 +31,7 @@ def sliding_windows(
     ) -> List[Tuple[np.ndarray, float]]:
     """
     Generate overlapping windows of `WINDOW_LENGTH_SEC` from `audio`.
+    This is so if a bomb is cut in half we don't miss it.
     Returns list of (window, start_time_s).
     """
     win_len = int(WINDOW_LENGTH_SEC * sr)

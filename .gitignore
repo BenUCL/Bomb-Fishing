@@ -1,1 +1,4 @@
 scratch/
+data/
+__pycache__/
+*.pyc

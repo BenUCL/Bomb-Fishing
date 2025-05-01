@@ -31,7 +31,7 @@ def main() -> None:
     detections_base.mkdir(parents=True, exist_ok=True)
     output_dir = detections_base / raw_name
 
-    # 2. Confirm deletion if it exists
+    # 2. Check if output dir exists and request user confirmation to overwrite
     if output_dir.exists():
         resp = input(
             f"Output directory '{output_dir}' already exists. "
@@ -44,7 +44,7 @@ def main() -> None:
 
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    # 3. Set up scratch dir
+    # 3. Set up scratch dir to store file lists for each batch
     SCRATCH_DIR.mkdir(parents=True, exist_ok=True)
 
     # 4. Gather all input files

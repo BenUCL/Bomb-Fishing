@@ -50,7 +50,7 @@ def main() -> None:
     # 4. Gather all input files
     files = [f for f in os.listdir(INPUT_DIR) if f.lower().endswith(".wav")]
     if not files:
-        logging.error("No WAV files found in %s", INPUT_DIR)
+        logging.error(f"No WAV files found in {INPUT_DIR}")
         return
 
     total_batches = math.ceil(len(files) / BATCH_SIZE)
@@ -94,7 +94,17 @@ def main() -> None:
         batch_file.unlink()
         logging.info("Finished batch %d/%d", batch_idx+1, total_batches)
 
-    logging.info("All batches complete. Final results in: %s", master_csv)
+    # 7. Sort the master CSV by File then Timestamp
+    df = pd.read_csv(master_csv)
+    df.sort_values(
+        by=["File", "Timestamp (HH:MM:SS)"],
+        inplace=True,
+        ignore_index=True
+    )
+    df.to_csv(master_csv, index=False)
+
+    # End 
+    logging.info(f"All batches complete. Final results in: {master_csv}")
 
 
 if __name__ == "__main__":

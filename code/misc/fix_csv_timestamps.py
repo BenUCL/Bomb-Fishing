@@ -13,7 +13,7 @@ from datetime import datetime, timedelta
 from typing import Optional
 
 # Configuration
-CSV_PATH: str = "/home/bwilliams/ucl_projects/bomb_fishing/data/M36_all_results_checked.csv"  
+CSV_PATH: str = ""  
 TIME_SHIFT_HOURS: int = 8
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")

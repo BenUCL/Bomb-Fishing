@@ -1,5 +1,11 @@
 # inference/bomb_detector.py
 
+# TODO: I think it saves the two streams the wrong way around. 
+# the second stream is given the earlier timestamp sometimes/always.
+# TODO: It does not do a good job at not producing duplicates, often
+# will write out both streams which is easily spotted but would be nice
+# to fix
+
 import os
 import datetime
 import logging

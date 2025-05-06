@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 
 # Give path to the raw audio files 
-RAW_AUDIO = "/media/bwilliams/226ECA8B6ECA56E7/four_islands_bombs/M43_barrang_caddi"
+RAW_AUDIO = "/media/bwilliams/sda1/four_islands_bombs/M36_pulau_pala"
 
 # Outputs will be saved in data/detections/<raw_name>, where <raw_name> is 
 # the name of the folder containing the raw audio files

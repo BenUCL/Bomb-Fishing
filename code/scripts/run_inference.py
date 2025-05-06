@@ -4,6 +4,7 @@ run_inference.py
 
 CLI to run bomb detection on a batch of WAV files, writing into a pre-created --output-dir.
 """
+# TODO: Get it to print current batch num/total batch num at the start of the tqdm file progress bar
 
 import argparse
 import logging

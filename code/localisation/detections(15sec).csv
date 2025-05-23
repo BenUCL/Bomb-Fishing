@@ -1,0 +1,13 @@
+file,start_time,end_time,blast
+/home/bwilliams/ucl_projects/bomb_fishing/data/estimating_distance/blast_2/A_20240702_002800.WAV,0,15,0
+/home/bwilliams/ucl_projects/bomb_fishing/data/estimating_distance/blast_2/A_20240702_002800.WAV,15,30,0
+/home/bwilliams/ucl_projects/bomb_fishing/data/estimating_distance/blast_2/A_20240702_002800.WAV,30,45,1
+/home/bwilliams/ucl_projects/bomb_fishing/data/estimating_distance/blast_2/A_20240702_002800.WAV,45,60,0
+/home/bwilliams/ucl_projects/bomb_fishing/data/estimating_distance/blast_2/B_20240702_002802.WAV,0,15,0
+/home/bwilliams/ucl_projects/bomb_fishing/data/estimating_distance/blast_2/B_20240702_002802.WAV,15,30,0
+/home/bwilliams/ucl_projects/bomb_fishing/data/estimating_distance/blast_2/B_20240702_002802.WAV,30,45,1
+/home/bwilliams/ucl_projects/bomb_fishing/data/estimating_distance/blast_2/B_20240702_002802.WAV,45,60,0
+/home/bwilliams/ucl_projects/bomb_fishing/data/estimating_distance/blast_2/C_20240702_002800.WAV,0,15,0
+/home/bwilliams/ucl_projects/bomb_fishing/data/estimating_distance/blast_2/C_20240702_002800.WAV,15,30,0
+/home/bwilliams/ucl_projects/bomb_fishing/data/estimating_distance/blast_2/C_20240702_002800.WAV,30,45,1
+/home/bwilliams/ucl_projects/bomb_fishing/data/estimating_distance/blast_2/C_20240702_002800.WAV,45,60,0

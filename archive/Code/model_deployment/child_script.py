@@ -1,35 +1,17 @@
 # Import the required libraries from the master script
-import datetime
+import tensorflow as tf
+from tensorflow.keras.models import load_model
+import autokeras
 import librosa
-import numpy as np
+import soundfile as sf
 import os
+import datetime
+from tqdm.auto import tqdm
+import numpy as np
 import pandas as pd
 import sys
 
-import soundfile as sf
-import time
-from tqdm.auto import tqdm
-from typing import Tuple, Union
 
-import autokeras
-import tensorflow as tf
-from tensorflow.keras.models import load_model
-
-WINDOW_LENGTH = 2.88
-STRIDE = 1.44
-SAMPLE_RATE = 8000
-
-# def get_recording_windows(audio_path:, sample_rate, window_len, stride) -> Tuple[np.ndarray, Union[int, float]]:
-#     """Extract windows from a recording.
-#     Args:
-#       audio: A file path to a recording.
-#       sample_rate: The sample rate of the recording.
-#       window_len: The desired 
-#       stride:
-    
-#     Returns:
-#       A list of windows.
-#     """
 
 def main():
     print("\n     Starting a new batch!\n")
@@ -53,68 +35,46 @@ def main():
     checked_file_counter = 0
     #file_counter = 0
 
+
     #set the sample rate that should be used (this will trigger resampling of audio if needed)
     new_sample_rate = 8000
 
     # set the length of each window in samples
-    window_len_hz = int(2.88 * new_sample_rate)
+    window_length_samples = int(2.88 * new_sample_rate)
     
     # set the stagger to add to stream2 below in second for loop
-    stagger = int(window_len_hz / 2)
+    stagger = int(window_length_samples/2)
 
-    # Time loading in batch of file names
-    start_batch_reading = time.perf_counter()
-    # read current batch from file
+   # read current batch from file
     with open(current_batch, 'r') as f:
         current_batch_files = [line.strip() for line in f]
-    end_batch_reading = time.perf_counter()
-    print(f"Time to read batch: {end_batch_reading - start_batch_reading:0.4f} seconds")
 
-    start_process_full_batch = time.perf_counter()
-    file_load_times = []
-    model_inference_times = []
-    mfcc_comp_times = []
-    # The main loop.
+    # the main loop
     for f in tqdm(current_batch_files):
         try:
-            # Print progress.
+            # print progress
             checked_file_counter += 1
             print('\nBatch {} of {}. Checking file: {}'.format(str(batch_counter), str(total_num_batches), f))
 
-            # Load the audio.
+            #load the audio
             audio_path = os.path.join(new_audio_dir, f)
-            start_file_load = time.perf_counter()
             audio, sample_rate = librosa.load(path=audio_path, sr=sample_rate)
-            end_file_load = time.perf_counter()
-            file_load_times.append(end_file_load - start_file_load)
 
             # resample the audio if needed
             if sample_rate != new_sample_rate:
                 audio = librosa.resample(audio, sample_rate, new_sample_rate)
 
             # Compute the number of windows
-            num_discrete_windows = len(audio) // window_len_hz
+            num_windows = len(audio) // window_length_samples
 
             # for skipping the first stream if needed later in next for loop
             timestamp2 = None
 
-            start_process_single_file = time.perf_counter()
+            # count windows to record how many were checked if the last was skipper
+            window_counter = 0
+
             # Iterate over windows and compute the MFCC spectrogram for each window
-            recording_windows = []
-            for i in range(num_discrete_windows):
-                start_index = i * window_len_hz
-                end_index = (i + 1) * window_len_hz
-                start_index_stride = (i * window_len_hz) + stagger
-                end_index_stride = ((i+1) * window_len_hz) + stagger
-                window1 = audio[start_index:end_index]
-                window2 = audio[start_index_stride:end_index_stride]
-                recording_windows.append(window1)
-                recording_windows.append(window2)
-
-            recording_mfccs = [librosa.feature.mfcc(y=window, sr=new_sample_rate, n_mfcc=32) 
-                               for window in recording_windows]
-
-            for i in range(len(recording_mfccs)):
+            for i in range(num_windows):
 
                 """This is done in 2 streams. Stream1 takes starts at 0sec and 
                     takes a window every 2.88 seconds. Stream2 starts at 1.44sec and
@@ -122,58 +82,55 @@ def main():
                     in length maximum, this ensures no bomb that would be cut in half by
                     stream1 is missed, as stream 2 has a staggered window."""
 
-                # # Get the start and end indices for the current window
-                # start_index1 = i * window_len_hz
-                # start_index2 = (i * window_len_hz) + stagger
+                # Get the start and end indices for the current window
+                start_index1 = i * window_length_samples
+                start_index2 = (i * window_length_samples) + stagger
 
-                # end_index1 = (i + 1) * window_len_hz
-                # end_index2 = ((i + 1) * window_len_hz) + stagger
+                end_index1 = (i + 1) * window_length_samples
+                end_index2 = ((i + 1) * window_length_samples) + stagger
 
-                # # Extract the current window
-                # window1 = audio[start_index1:end_index1]
-                # window2 = audio[start_index2:end_index2]
+                # Extract the current window
+                window1 = audio[start_index1:end_index1]
+                window2 = audio[start_index2:end_index2]
+
+                # check window length fits network input shape
+                window_counter += 1
 
                 # Compute the MFCC spectrogram for the current window
-                # start_mfcc_comp = time.perf_counter()
-                # mfcc_spec1 = librosa.feature.mfcc(y=window1, sr=new_sample_rate, n_mfcc = 32)
-                # mfcc_spec2 = librosa.feature.mfcc(y=window2, sr=new_sample_rate, n_mfcc = 32)
-                # end_mfcc_comp = time.perf_counter()
-                # mfcc_comp_times.append(end_mfcc_comp - start_mfcc_comp)
+                mfcc_spec1 = librosa.feature.mfcc(y=window1, sr=new_sample_rate, n_mfcc = 32)
+                mfcc_spec2 = librosa.feature.mfcc(y=window2, sr=new_sample_rate, n_mfcc = 32)
 
                 # add extra dimensions for networks input_shape
-                mfcc_spec1 = np.expand_dims(recording_mfccs[i], axis=2)
-                mfcc_spec2 = np.expand_dims(recording_mfccs[i+1], axis=2)
+                mfcc_spec1 = np.expand_dims(mfcc_spec1, axis=2)
+                mfcc_spec2 = np.expand_dims(mfcc_spec2, axis=2)
                 mfcc_spec1 = np.expand_dims(mfcc_spec1, axis=0)
                 mfcc_spec2 = np.expand_dims(mfcc_spec2, axis=0)
 
+                # TODO(hamer): investigate batch inference.
                 # Perform the function on the MFCC spectrogram
-                start_model_inf = time.perf_counter()
                 result1 = best_model.predict(mfcc_spec1, verbose=0) > 0.5
                 if len(window2) == 23040:
                     result2 = best_model.predict(mfcc_spec2, verbose=0) > 0.5
                 else:
                     result2 = None
-                end_model_inf = time.perf_counter()
-                model_inference_times.append(end_model_inf - start_model_inf)
+                    #print('\n    Checked {} windows. Skipping last window as its <1.44sec'.format(window_counter)) ######################### not printing where it should
 
-                # Check if a bomb was found in the prev 1.44 second window for stream 2.
-                start_index_hz1 = i * window_len_hz
-                check = round(start_index_hz1 - 1.44, 2)
+                # check if a bomb was found in the prev 1.44 second window for stream 2
+                check = round((start_index1/new_sample_rate) - 1.44, 2)
 
-                # If stream 1 is a bomb, and it was not found by the preceding stream 2 (skip this step if its the very first window)
-                # print(check, timestamp2)
-                if result1 == True and timestamp2 != check:  # and timestamp2 is not None:
+                # if stream 1 is a bomb, and it was not found by the preceding stream 2 (skip this step if its the very first window)
+                if result1 == True and timestamp2 != check:# and timestamp2 is not None:
                     # get timestamp of this window 
-                    timestamp1 = start_index_hz1 / new_sample_rate
+                    timestamp1 = start_index1/new_sample_rate
                     timestamp_str1 = str(datetime.timedelta(seconds=timestamp1))
-                    hmmss = timestamp_str1[0:7]  # remove milliseconds
+                    hmmss = timestamp_str1[0:7] # remove milliseconds
                     print('Suspected bomb at: ' + hmmss)
 
                     # select the 5 second window to save
                     # max is used to ensure the window isnt set to a negative value if the bomb occurs at the very start of the file 
-                    write_start = max(start_index_hz1 - (1 * new_sample_rate), 4000)
-                    write_end = max(start_index_hz1 + (3 * new_sample_rate), 44000)
-                    audio_write = audio[write_start : write_end]
+                    write_start = max(start_index1 - (1*new_sample_rate), 4000)
+                    write_end = max(start_index1 + (3*new_sample_rate), 44000)
+                    audio_write = audio[write_start:write_end]
 
                     # write a new wav file for this window
                     file_counter +=1 # store the number
@@ -204,9 +161,6 @@ def main():
 
                     # note file and timepoint
                     suspected_bombs.append((f, timestamp_str2))
-            end_process_single_file = time.perf_counter()
-            print(f"Average time to process MFCCs for {i}-th file: {sum(mfcc_comp_times)/len(mfcc_comp_times):0.4f} seconds")
-            print(f"Time to process single file: {end_process_single_file - start_process_single_file:0.4f} seconds")
 
 
         except Exception as e:
@@ -215,14 +169,7 @@ def main():
             suspected_bombs.append((f, 'file was skipped, check if corrupted'))
             continue
 
-    end_process_full_batch = time.perf_counter()
-    print(f"Time to process full batch (gross): {end_process_full_batch - start_process_full_batch:0.4f} seconds")
-    print(f"Average time per file: {(end_process_full_batch - start_process_full_batch)/len(current_batch_files):0.4f} seconds")
-    print(f"Average time to load file: {sum(file_load_times)/len(file_load_times):0.4f} seconds")
-    print(f"Average time to compute MFCCs: {sum(mfcc_comp_times)/len(mfcc_comp_times):0.4f} seconds")
-    print(f"Average time to perform model inference: {sum(model_inference_times)/len(model_inference_times):0.4f} seconds")
 
-    start_write_to_csv = time.perf_counter()
     # Load the existing CSV file
     existing_table = pd.read_csv(output_folder + '\\' + 'temporary_results_table.csv')
 
@@ -246,8 +193,10 @@ def main():
     for file in skipped_files:
         print(f"  {file}")
     print("")
-    end_write_to_csv = time.perf_counter()
-    print(f"Time to write batch to CSV: {end_write_to_csv - start_write_to_csv:0.4f} seconds")
+
+
+
+
 
 
 if __name__ == "__main__":

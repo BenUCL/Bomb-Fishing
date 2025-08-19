@@ -65,9 +65,9 @@ The scripts expect this directory structure:
 ```
 Bomb-Fishing/
 ├── data/                              # Main data directory
-│   ├── compressed_new_data/           # Your compressed raw data files
-│   │   ├── 2023_aug_21.tar.gz
-│   │   ├── 2023_nov_23.tar.gz
+│   ├── compressed_new_data/           # Your compressed (.zip) raw data files
+│   │   ├── 2023_aug_21.zip
+│   │   ├── 2023_nov_23.zip
 │   │   └── ...
 │   ├── annotated_spreadsheets/        # CSV annotation files
 │   │   ├── south_2023_aug21.csv

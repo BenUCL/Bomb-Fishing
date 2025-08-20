@@ -1,4 +1,5 @@
 scratch/
 data/
+data_other/
 __pycache__/
 *.pyc

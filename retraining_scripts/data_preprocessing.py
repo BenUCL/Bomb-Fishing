@@ -71,9 +71,9 @@ class DataPreprocessor:
         """Extract all compressed detection files and return mapping of month to directory."""
         logger.info("Step 1: Extracting all compressed detection files...")
 
-        compressed_files = list(self.data_dir.glob("*.7z")) + list(
-            self.data_dir.glob("*.zip")
-        )
+        compressed_files = list((self.data_dir / "compressed_new_data").glob("*.7z")) + \
+                           list((self.data_dir / "compressed_new_data").glob("*.zip"))
+
         month_dirs = {}
 
         for compressed_file in compressed_files:
@@ -126,7 +126,7 @@ class DataPreprocessor:
         else:
             csv_month = month
 
-        csv_file = self.data_dir / "annotated_spreadsheets" / f"south_{csv_month}.csv"
+        csv_file = self.data_dir / "annotated_spreadsheets" / f"north_{csv_month}.csv"
 
         if not csv_file.exists():
             logger.warning(

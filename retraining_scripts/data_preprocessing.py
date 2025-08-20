@@ -126,7 +126,7 @@ class DataPreprocessor:
         else:
             csv_month = month
 
-        csv_file = self.data_dir / "annotated_spreadsheets" / f"north_{csv_month}.csv"
+        csv_file = self.data_dir / "annotated_spreadsheets" / f"south_{csv_month}.csv"
 
         if not csv_file.exists():
             logger.warning(
@@ -223,11 +223,19 @@ class DataPreprocessor:
             logger.warning(f"No annotations found for {month}")
             return 0, 0
 
-        # Find detection files
+        # Find detection files 
+        # (robust to an extra nested month folder which happens when zipping on linux)
         detection_dir = month_dir / "Detected_bombs"
         if not detection_dir.exists():
-            logger.warning(f"Detection directory not found: {detection_dir}")
-            return 0, 0
+            # Fallback: allow exactly one extra level, e.g., month_dir/<month>/Detected_bombs
+            candidates = list(month_dir.glob("*/Detected_bombs"))
+            if candidates:
+                detection_dir = candidates[0]
+                logger.info(f"Using nested detection directory: {detection_dir}")
+            else:
+                logger.warning(f"Detection directory not found: {month_dir}/Detected_bombs (or nested)")
+                return 0, 0
+
 
         detection_files = list(detection_dir.glob("*.wav"))
         logger.info(f"Found {len(detection_files)} detection files for {month}")

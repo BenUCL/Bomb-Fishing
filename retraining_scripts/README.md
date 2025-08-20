@@ -84,7 +84,7 @@ Bomb-Fishing/
 ```
 
 **Required input data:**
-- Place your compressed data files (`.tar.gz`) in `data/compressed_new_data/`
+- Place your compressed data files (`.zip`) in `data/compressed_new_data/`
 - Place corresponding CSV annotation files in `data/annotated_spreadsheets/`
 
 ## 📝 Step-by-Step Pipeline
